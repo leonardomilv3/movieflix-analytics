@@ -13,23 +13,23 @@ from dotenv import load_dotenv
 # 0) Configuração com Banco PostgreSQL
 # =====================
 
-# Carregar variáveis de ambiente do arquivo .env
-load_dotenv()
+# # Carregar variáveis de ambiente do arquivo .env
+# load_dotenv()
 
-# Variáveis de ambiente
-PG_USER = os.getenv("PG_USER")
-PG_PASS = os.getenv("PG_PASS")
-PG_DB   = os.getenv("PG_DB")
-PG_HOST = os.getenv("PG_HOST")
-PG_PORT = os.getenv("PG_PORT")
+# # Variáveis de ambiente
+# PG_USER = os.getenv("PG_USER")
+# PG_PASS = os.getenv("PG_PASS")
+# PG_DB   = os.getenv("PG_DB")
+# PG_HOST = os.getenv("PG_HOST")
+# PG_PORT = os.getenv("PG_PORT")
 
 
-# Conexão PostgreSQL
-conn_str = f"postgresql+psycopg2://{PG_USER}:{PG_PASS}@{PG_HOST}:{PG_PORT}/{PG_DB}"
-print("Conexão:", conn_str)
+# # Conexão PostgreSQL
+# conn_str = f"postgresql+psycopg2://{PG_USER}:{PG_PASS}@{PG_HOST}:{PG_PORT}/{PG_DB}"
+# print("Conexão:", conn_str)
 
-time.sleep(5)
-engine = create_engine(conn_str, echo=False)
+# time.sleep(5)
+# engine = create_engine(conn_str, echo=False)
 
 
 
@@ -63,6 +63,7 @@ def parse_json_column(x, key):
         return []
 
 movies["genres"] = movies["genres"].apply(lambda x: parse_json_column(x, "name"))
+print(movies["genres"].head())
 movies["countries"] = movies["production_countries"].apply(lambda x: parse_json_column(x, "name"))
 
 

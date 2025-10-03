@@ -21,28 +21,12 @@ O sistema permite cadastrar filmes, avaliá-los e extrair **insights de negócio
 ## Arquitetura Geral
 
 
-    ┌───────────────────┐
-    │  Frontend (React) │  ← roda localmente (npm run dev)
-    └─────────┬─────────┘
-              │
-       Reverse Proxy (Nginx)
-              │
-    ┌─────────▼──────────┐
-    │  Backend (FastAPI) │  ← Container Docker
-    └─────────┬──────────┘
-              │
-    ┌─────────▼───────────┐
-    │ Banco de Dados (PG) │  ← Volume persistente
-    └─────────┬───────────┘
-              │
-    ┌─────────▼────────────┐
-    │     ETL Container    │ ← Extrai/Agrupa dados → DW/Data Mart
-    └──────────────────────┘
 
 
+![arquitetura](./assets/Arquitetura_DevOp.png)
 
 
-- **Frontend:** Interface para cadastro e avaliação de filmes (React).
+- **Frontend:** Interface para cadastro e avaliação de filmes (React) (Densenvolvida por IA - bolt.new).
 - **Backend:** API REST para gerenciar filmes e avaliações (FastAPI ou Node, containerizado).
 - **ETL:** Processo em container que simula ingestão de dados no Data Lake, transformação no DW e geração de visões de negócio nos Data Marts.
 - **Docker Compose:** Orquestra containers do backend, ETL e banco de dados.
@@ -53,13 +37,13 @@ O sistema permite cadastrar filmes, avaliá-los e extrair **insights de negócio
 ## 1. Aplicação Web
 
 ###  Funcionalidades
-- Cadastro de filmes (título, ano, gênero).
-- Avaliação de filmes com notas de 0 a 5.
+- Cadastro de filmes.
+- Avaliação de filmes com notas de 0 a 10.
 - Listagem de filmes com médias atualizadas em tempo real.
 - Dashboard básico com estatísticas de avaliações.
 
 ### Stack
-- **Frontend:** React + Vite (roda localmente com `npm run dev`).
+- **Frontend:** React + Vite.
 - **Backend:** FastAPI (Python) com SQLAlchemy.
 - **Banco de Dados:** PostgreSQL.
 
@@ -69,28 +53,30 @@ O sistema permite cadastrar filmes, avaliá-los e extrair **insights de negócio
 
 
 ###  Data Lake (Dataset movies do Kaggle)
+
+- Dataset de Movies : [kaggle movies](https://www.kaggle.com/datasets/rounakbanik/the-movies-dataset/data)
 - Recebe os dados brutos das avaliações em formato CSV ou JSON.
 - Simula a chegada de dados de uso real da plataforma.
 
 ### Data Warehouse (DW)
 - Realiza limpeza e padronização dos dados.
-- Cria tabelas dimensionais e de fatos (ex: `dim_filme`, `fact_avaliacoes`).
 
 ### Data Marts
 - Gera visões agregadas específicas para **análise de negócio**, como:
-  - Média de notas por gênero.
-  - Filmes mais bem avaliados por faixa etária.
-  - Volume de avaliações por período.
+  - 10 Filmes mais bem avaliados.
+  - Filmes de comédia mais bem avaliados.
+  - Filmes de animação mais bem avaliados.
 
 Os dados são armazenados em tabelas separadas no banco de dados, permitindo que **dashboards analíticos** ou queries SQL simples entreguem insights rapidamente para decisões estratégicas.
 
 ---
 
-## 3. Containerização com Docker
+## 3. Containerização com Docker e docker compose
 
 ###  Estrutura de Pastas
 
 
+```bash
 .
 ├── app/ # Backend FastAPI
 │ ├── Dockerfile
@@ -98,14 +84,41 @@ Os dados são armazenados em tabelas separadas no banco de dados, permitindo que
 ├── etl/ # ETL Pipeline (Python)
 │ ├── Dockerfile
 │ └── ...
-├── frontend/ # React App (roda localmente)
+├── frontend/ # React App
 │ └── ...
 ├── docker-compose.yml
 └── .github/workflows/ci-cd.yml
+```
 
 
+### ETL - `Dockerfile`
 
-### Backend - `Dockerfile`
+```dockerfile
+# Usar Python oficial
+FROM python:3.11-slim
+
+# Criar diretório de trabalho
+WORKDIR /app
+
+# Instalar dependências do sistema para psycopg2
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiar dependências e instalar
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar script ETL e CSVs tratados
+COPY etl.py .
+
+# Rodar script
+CMD ["python", "etl.py"]
+
+```
+
+## App - `Dockerfile`
 
 ```dockerfile
 FROM python:3.11-slim
@@ -115,7 +128,8 @@ RUN pip install -r requirements.txt
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
---
+
+
 
 ## 4. Pipeline CI/CD (GitHub Actions + DockerHub)
 
@@ -125,18 +139,16 @@ Sempre que houver um git push na branch main:
 - Publica as imagens no DockerHub.
 
 
---
-
 ## 5. Visões de Negócio - Data Marts
 
-Data Mart	Descrição
-dm_genero_media_notas	Média de notas por gênero (identifica gêneros mais bem avaliados).
-dm_filmes_top_avaliados	Top filmes por nota média (apoia recomendações).
-dm_avaliacoes_por_periodo	Volume de avaliações por mês/ano (identifica sazonalidades de uso).
-dm_engajamento_usuarios	Agrupa usuários por quantidade de avaliações (identifica heavy users).
+| Data Mart                   | Descrição                                                                 |
+|-----------------------------|----------------------------------------------------------------------------|
+| filme_top10_nota     | Visão negocial para a empresa, pois permite analisar os 10 filmes mais bem avaliados (nota média) e que geraram renda ao longo do tempo.       |
+| filme_comedia_top     | Visão negocial para a empresa, pois permite analisar os filmes por genero de comédia, sucesso entre os adultos, com a maior quantidade de avaliações e notam média em ordem decrescente.                |
+| filme_animacao_top   | Visão negocial para a empresa, pois permite analisar os filmes por genero de animação, sucesso entre as crianças e adultos, com a maior quantidade de avaliações e notam média em ordem decrescente.      |
 
 
---
+
 
 ## 6. Como executar o Projeto
 
@@ -148,17 +160,44 @@ git clone https://github.com/seu-usuario/movieflix-analytics.git
 cd movieflix-analytics
 ```
 
-2. Suba o backend, ETL e banco
+2. Substitua o `.env.example` por `.env` 
+
+3. Suba o backend, ETL e banco
 
 ```bash
 docker-compose up -d --build
 ```
 
-3. Rode o frontend localmente
+4. Rode o frontend localmente
 
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+
+
+## 7. Projeto executando
+
+
+Segue as evidências do projeto rodando:
+
+
+![cli](./assets/terminal.png)
+
+
+![tela1](./assets/tela1.png)
+
+![tela2](./assets/tela2.png)
+
+![tela3](./assets/tela3.png)
+
+![tela4](./assets/tela4.png)
+
+![tela5](./assets/tela5.png)
+
+![tela6](./assets/tela6.png)
+
+
+
 

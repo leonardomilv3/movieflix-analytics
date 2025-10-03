@@ -102,15 +102,15 @@ def submit_rating(rating_in: schemas.RatingCreate, db: Session = Depends(get_db)
 def refresh_materialized_views(db: Session = Depends(get_db)):
     # Roda REFRESH MATERIALIZED VIEW para os data marts criados pelo ETL
     try:
-        db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY IF EXISTS filme_top10_nota;"))
-        db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY IF EXISTS filme_comedia_top;"))
-        db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY IF EXISTS filme_animacao_top;"))
+        db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY filme_top10_nota;"))
+        db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY filme_comedia_top;"))
+        db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY filme_animacao_top;"))
         db.commit()
     except Exception:
         db.rollback()
         # fallback non-concurrent
-        db.execute(text("REFRESH MATERIALIZED VIEW IF EXISTS filme_top10_nota;"))
-        db.execute(text("REFRESH MATERIALIZED VIEW IF EXISTS filme_comedia_top;"))
-        db.execute(text("REFRESH MATERIALIZED VIEW IF EXISTS filme_animacao_top;"))
+        db.execute(text("REFRESH MATERIALIZED VIEW filme_top10_nota;"))
+        db.execute(text("REFRESH MATERIALIZED VIEW filme_comedia_top;"))
+        db.execute(text("REFRESH MATERIALIZED VIEW filme_animacao_top;"))
         db.commit()
     return {"refreshed": True}

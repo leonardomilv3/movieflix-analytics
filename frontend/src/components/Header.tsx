@@ -50,6 +50,16 @@ const Header = () => {
                 Browse
               </Link>
             </li>
+            <li>
+              <Link
+                to="/create"
+                className={`text-sm font-medium transition-colors hover:text-gray-300 ${
+                  isActive('/create') ? 'text-white' : 'text-gray-400'
+                }`}
+              >
+                Register Movie
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -110,6 +120,17 @@ const Header = () => {
                 }`}
               >
                 Browse
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/create"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block text-sm font-medium transition-colors ${
+                  isActive('/create') ? 'text-white' : 'text-gray-400'
+                }`}
+              >
+                Register Movie
               </Link>
             </li>
           </ul>

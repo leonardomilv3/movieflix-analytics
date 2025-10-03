@@ -20,7 +20,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          
+
       - name: Build and push app image
         uses: docker/build-push-action@v4
         with:
@@ -32,6 +32,5 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./etl
-          file: Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/movieflix-analytics-etl:latest
